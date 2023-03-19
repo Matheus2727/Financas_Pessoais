@@ -1,0 +1,297 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      ZFINANC_MAIN
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE ZFINANC_MAIN_TOP                        .    " Global Data
+
+* INCLUDE ZFINANC_MAIN_O01                        .  " PBO-Modules
+* INCLUDE ZFINANC_MAIN_I01                        .  " PAI-Modules
+* INCLUDE ZFINANC_MAIN_F01                        .  " FORM-Routines
+
+CLASS dynpro_utilities DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS value_help.
+ENDCLASS.
+
+CLASS dynpro_utilities IMPLEMENTATION.
+  METHOD value_help.
+    TYPES: BEGIN OF ZTY_CART,
+             ID type i,
+             ID_USER  TYPE i,
+             NOME(20) TYPE c,
+           END OF ZTY_CART.
+    DATA ZIT_CART TYPE STANDARD TABLE OF ZTY_CART.
+    SELECT ID, ID_USER, NOME
+                FROM ZTB_FIN_CART
+                INTO CORRESPONDING FIELDS OF TABLE @ZIT_CART.
+    CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+         EXPORTING
+              retfield        = 'NOME'
+              value_org       = 'S'
+         TABLES
+              value_tab       = ZIT_CART
+         EXCEPTIONS
+              parameter_error = 1
+              no_values_found = 2
+              OTHERS          = 3.
+    IF sy-subrc <> 0.
+      ...
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+
+
+
+
+*&---------------------------------------------------------------------*
+*&      Module  REDIRECT_01  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module redirect_01 input.
+  OUT_CON = ''.
+  if sy-ucomm = 'FMAIN'.
+
+    Set screen 1.
+
+    Leave screen.
+
+  ENDIF.
+endmodule.
+*&---------------------------------------------------------------------*
+*&      Module  REDIRECT_02  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module redirect_02 input.
+  if sy-ucomm = 'FCART'.
+
+    Set screen 2.
+
+    Leave screen.
+
+  ENDIF.
+endmodule.
+*&---------------------------------------------------------------------*
+*&      Module  REDIRECT_03  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module redirect_03 input.
+  if sy-ucomm = 'FTRA'.
+
+    Set screen 3.
+
+    Leave screen.
+
+  ENDIF.
+endmodule.
+*&---------------------------------------------------------------------*
+*&      Module  LOGAR  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module logar input.
+  if sy-ucomm = 'FLOG'.
+    clear ZWA_USU.
+    SELECT SINGLE * from ZTB_FIN_USU
+       WHERE LOGIN = @INP_LIN_IN and
+       Senha = @INP_SEIN
+       INTO CORRESPONDING FIELDS OF @ZWA_USU.
+
+    if ZWA_USU-LOGIN <> ''.
+      User_ID_atual = ZWA_USU-ID.
+      LOGIN_atual = ZWA_USU-LOGIN.
+      CONCATENATE LOGIN_atual 'logado com sucesso'
+            INTO OUT_LOG SEPARATED BY space.
+    else.
+      OUT_LOG = 'Usuario não existe ou senha incorreta'.
+    endif.
+
+  ENDIF.
+endmodule.
+*&---------------------------------------------------------------------*
+*&      Module  REGISTRAR  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module registrar_usu input.
+  if sy-ucomm = 'FCAD'.
+    clear ZWA_USU.
+    SELECT SINGLE * from ZTB_FIN_USU
+       WHERE LOGIN = @INP_LIN_UP
+       INTO CORRESPONDING FIELDS OF @ZWA_USU.
+
+    if ZWA_USU-LOGIN = ''.
+      call function 'NUMBER_GET_NEXT'
+        exporting
+          nr_range_nr                   = '01'
+          object                        = 'ZRA_FIN_US'
+       IMPORTING
+         NUMBER                        = User_ID_new
+       EXCEPTIONS
+         INTERVAL_NOT_FOUND            = 1
+         NUMBER_RANGE_NOT_INTERN       = 2
+         OBJECT_NOT_FOUND              = 3
+         QUANTITY_IS_0                 = 4
+         QUANTITY_IS_NOT_1             = 5
+         INTERVAL_OVERFLOW             = 6
+         BUFFER_OVERFLOW               = 7
+         OTHERS                        = 8
+                .
+        if sy-subrc <> 0.
+*     Implement suitable error handling here
+        endif.
+
+
+      ZWA_USU-MANDT = '001'.
+      ZWA_USU-ID = User_ID_new.
+      ZWA_USU-PRI_NOME = INP_PNOM.
+      ZWA_USU-ULT_NOME = INP_UNOM.
+      ZWA_USU-LOGIN = INP_LIN_UP.
+      ZWA_USU-SENHA = INP_SEUP.
+      "append ZWA_USU to ZIT_USU.
+      insert INTO ZTB_FIN_USU VALUES ZWA_USU.
+      OUT_CAD = ''.
+      concatenate 'Cadastro de ' INP_LIN_UP 'foi Concluido.'
+      INTO OUT_CAD SEPARATED BY space.
+
+
+    else.
+      OUT_CAD = 'Usuario já existe'.
+    endif.
+  ENDIF.
+endmodule.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0002 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+module status_0002 output.
+* SET PF-STATUS 'xxxxxxxx'.
+* SET TITLEBAR 'xxx'.
+"User_ID_atual
+"LOGIN_atual
+SET PF-STATUS 'SCREEN_100'.
+
+Data: Z_VID type VRM_ID,
+      ZIT_VVALUES type VRM_VALUES,
+      ZWA_VVALUE like LINE OF ZIT_VVALUES.
+
+clear ZWA_CART_temp.
+clear ZIT_CART_temp.
+clear ZIT_VVALUES.
+clear ZWA_VVALUE.
+
+select NOME, ID from ZTB_FIN_CART
+  where ID_USER = @User_ID_atual
+  into table @ZIT_CART_temp.
+
+  "if sy-subrc is INITIAL.
+    LOOP AT ZIT_CART_temp INTO ZWA_CART_temp.
+      ZWA_VVALUE-key = conv string( ZWA_CART_temp-ID ).
+      ZWA_VVALUE-text = ZWA_CART_temp-NOME.
+      append ZWA_VVALUE to ZIT_VVALUES.
+      clear ZWA_VVALUE.
+    ENDLOOP.
+  "endif.
+
+  Z_VID = 'ZTB_FIN_CART-NOME'.
+
+  call function 'VRM_SET_VALUES'
+    exporting
+      ID = Z_VID
+      values = ZIT_VVALUES.
+
+endmodule.
+
+MODULE cancel INPUT.
+  LEAVE PROGRAM.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  CRIAR_CART  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module criar_cart input.
+  if sy-ucomm = 'FCRI'.
+    if LOGIN_atual <> '' and User_ID_atual <> ''.
+
+
+        clear ZWA_CART.
+        SELECT SINGLE * from ZTB_FIN_CART
+           WHERE ID_USER = @User_ID_atual
+           and NOME = @INP_NOME
+           INTO CORRESPONDING FIELDS OF @ZWA_CART.
+
+        if ZWA_CART-NOME = ''.
+          call function 'NUMBER_GET_NEXT'
+            exporting
+              nr_range_nr                   = '01'
+              object                        = 'ZRA_FIN_CA'
+           IMPORTING
+             NUMBER                        = Cart_ID_new
+           EXCEPTIONS
+             INTERVAL_NOT_FOUND            = 1
+             NUMBER_RANGE_NOT_INTERN       = 2
+             OBJECT_NOT_FOUND              = 3
+             QUANTITY_IS_0                 = 4
+             QUANTITY_IS_NOT_1             = 5
+             INTERVAL_OVERFLOW             = 6
+             BUFFER_OVERFLOW               = 7
+             OTHERS                        = 8
+                    .
+            if sy-subrc <> 0.
+*         Implement suitable error handling here
+            endif.
+
+
+          ZWA_CART-MANDT = '001'.
+          ZWA_CART-ID = Cart_ID_new.
+          ZWA_CART-NOME = INP_NOME.
+          ZWA_CART-ID_USER = User_ID_atual.
+          ZWA_CART-QUANTIA = INP_QUANT.
+          insert INTO ZTB_FIN_CART VALUES ZWA_CART.
+          OUT_CRI = ''.
+          concatenate 'Criação de ' INP_NOME 'foi Concluida.'
+          INTO OUT_CRI SEPARATED BY space.
+
+
+        else.
+          OUT_CRI = 'Carteira já existe'.
+        endif.
+      ENDIF.
+  ENDIF.
+endmodule.
+
+MODULE CONSULTAR_CART INPUT.
+  if sy-ucomm = 'FCON'.
+  dynpfields-fieldname = 'ZTB_FIN_CART-NOME' .
+  APPEND dynpfields.
+
+  CALL FUNCTION 'DYNP_VALUES_READ'
+    EXPORTING
+      dyname     = sy-cprog "Current program
+      dynumb     = sy-dynnr "Current screen
+    TABLES
+      dynpfields = dynpfields "Relevant screen fields
+    EXCEPTIONS
+      OTHERS     = 0.
+
+  "concatenate 'ab' dynpfields-fieldvalue
+  "into OUT_CRI.
+  ID_temp = conv i( dynpfields-fieldvalue ).
+  clear ZWA_CART.
+  select single NOME, QUANTIA from
+    ZTB_FIN_CART
+    where ID = @ID_temp and
+    ID_USER = @User_ID_atual
+    into @DATA(ZWA_FIN_CART).
+  QUANT_str_temp = conv string( ZWA_FIN_CART-QUANTIA ).
+  concatenate 'A Carteira ' ZWA_FIN_CART-NOME 'tem ' QUANT_str_temp 'Reais'
+  into OUT_CON SEPARATED BY space.
+  endif.
+ENDMODULE.

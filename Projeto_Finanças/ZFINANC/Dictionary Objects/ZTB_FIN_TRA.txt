@@ -1,0 +1,9 @@
+Database table
+
+Field;Data element;Data Type;Length;Decimal;Short Description
+MANDT;MANDT;CLNT;3;0;Client
+ID;;INT2;5;0;ID da Transação
+ID_USER;;INT2;5;0;ID do Cliente
+ID_Carteira;;INT2;5;0;ID da Carteira
+Terceiro;;CHAR;20;0;Nome do Terceiro
+Quantia;;DF16_DEC;10;2;Quantia da Carteira

@@ -1,0 +1,13 @@
+PROCESS BEFORE OUTPUT.
+MODULE STATUS_0002.
+*
+PROCESS AFTER INPUT.
+* MODULE USER_COMMAND_0002.
+MODULE cancel AT EXIT-COMMAND.
+module redirect_01.
+module redirect_03.
+module criar_cart.
+module consultar_cart.
+
+PROCESS ON VALUE-REQUEST.
+"FIELD ZTB_FIN_CART-NOME MODULE create_dropdown_box.

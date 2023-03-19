@@ -1,0 +1,9 @@
+Database table
+
+Field;Data element;Data Type;Length;Decimal;Short Description
+MANDT;MANDT;CLNT;3;0;Client
+ID;;INT2;5;0;ID do Usuario
+PRI_NOME;;CHAR;20;0;Primeiro da Carteira
+ULT_NOME;;CHAR;20;0;Ultimo Nome do Usuario
+LOGIN;;INT2;5;0;LOGIN do Usuario
+SENHA;;DF16_DEC;10;2;Senha do Usuario

@@ -1,0 +1,8 @@
+PROCESS BEFORE OUTPUT.
+* MODULE STATUS_0001.
+*
+PROCESS AFTER INPUT.
+module redirect_02.
+module redirect_03.
+module logar.
+module registrar_usu.

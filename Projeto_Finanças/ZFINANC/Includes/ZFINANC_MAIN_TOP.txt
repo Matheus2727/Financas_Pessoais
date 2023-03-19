@@ -1,0 +1,59 @@
+&---------------------------------------------------------------------
+& Include ZFINANC_MAIN_TOP                         - Module Pool      ZFINANC_MAIN
+&---------------------------------------------------------------------
+PROGRAM ZFINANC_MAIN.
+
+TABLES ZTB_FIN_USU, ZTB_FIN_TRA, ZTB_FIN_CART.
+
+DATA   ok_code TYPE sy-ucomm.
+
+type-POOLs  VRM.
+
+Data INP_LIN_IN(20) type c.
+Data INP_SEIN(20) type c.
+Data OUT_LOG(50) type c.
+Data INP_LIN_UP(20) type c.
+Data INP_SEUP(20) type c.
+Data INP_PNOM(20) type c.
+Data INP_UNOM(20) type c.
+Data OUT_CAD(50) type c.
+
+Data INP_NOME(20) type c.
+Data INP_QUANT type p decimals 2.
+Data OUT_CRI(40) type c.
+Data OUT_LOG2(50) type c.
+Data DD_CART(50) type c.
+Data ZTB_FIN_CART-NOME(50) type c.
+Data NOME(20) type c.
+Data OUT_CON(50) type c.
+DATA ID_temp type i.
+Data QUANT_str_temp(20) type c.
+
+Data User_ID_atual type int2.
+Data LOGIN_atual(20) type c.
+
+Data User_ID_new type int2.
+Data Cart_ID_new type int2.
+Data Tra_ID_new type int2.
+
+Data val(5) type c.
+
+types begin of ZTY_carteira,
+  Carteira_ID type int2,
+  Quantia type p decimals 2,
+END OF ZTY_carteira.
+
+data ZIT_CART type STANDARD TABLE OF ZTB_FIN_CART,
+      ZWA_CART LIKE LINE OF ZIT_CART,
+      ZIT_USU TYPE STANDARD TABLE OF ZTB_FIN_USU,
+      ZWA_USU LIKE LINE OF ZIT_USU.
+
+Types begin of ZTY_CART_temp,
+  NOME(20) type c,
+  ID type i,
+  END OF ZTY_CART_temp.
+
+Data ZIT_CART_temp type STANDARD TABLE OF ZTY_CART_temp,
+      ZWA_CART_temp LIKE LINE OF ZIT_CART_temp.
+
+DATA dynpfields LIKE dynpread OCCURS 1 WITH HEADER LINE.
